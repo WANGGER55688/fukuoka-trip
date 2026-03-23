@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="福岡帳本">
+<title>福岡旅遊帳本 🍜</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+
+  :root {
+    --bg: #F5F0E8;
+    --card: #FFFDF8;
+    --border: #E2D9C8;
+    --text: #2C2416;
+    --muted: #9B8E7A;
+    --accent: #C84B2F;
+    --accent2: #2F6EC8;
+    --green: #2A7A4B;
+    --red: #C84B2F;
+    --tag-我: #E8F0FB;
+    --tag-我-t: #1A4A8A;
+    --tag-伴: #E8F5EE;
+    --tag-伴-t: #1A5C34;
+    --tag-同: #FBE8E8;
+    --tag-同-t: #8A1A1A;
+    --tag-女: #F8E8F5;
+    --tag-女-t: #6A1A6A;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 80px;
+    max-width: 430px;
+    margin: 0 auto;
+  }
+
+  /* Header */
+  .header {
+    background: var(--text);
+    color: var(--bg);
+    padding: 16px 20px 14px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .header h1 { font-size: 20px; font-weight: 700; letter-spacing: 0.02em; }
+  .header .date-range { font-size: 11px; opacity: 0.6; margin-top: 2px; }
+  .total-badge { text-align: right; }
+  .total-badge .amount { font-size: 22px; font-weight: 700; }
+  .total-badge .label { font-size: 10px; opacity: 0.6; }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 72px;
+    z-index: 99;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 12px 4px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    color: var(--muted);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .tab-btn.active { color: var(--text); border-bottom-color: var(--accent); }
+
+  /* Content */
+  .tab-panel { display: none; padding: 16px; }
+  .tab-panel.active { display: block; }
+
+  /* Form */
+  .form-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .field-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+    margin-top: 14px;
+    display: block;
+  }
+  .field-label:first-child { margin-top: 0; }
+
+  input[type="text"], input[type="number"], input[type="date"], select {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 15px;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  input:focus, select:focus { border-color: var(--accent); background: #fff; }
+
+  .amount-row { display: flex; gap: 8px; }
+  .currency-select { width: 90px; flex-shrink: 0; font-size: 14px; font-weight: 700; }
+  .amount-input { flex: 1; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  /* Chip selectors */
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+  .chip {
+    padding: 7px 14px;
+    border-radius: 99px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .chip.sel-婷婷 { background: var(--tag-我); border-color: var(--tag-我-t); color: var(--tag-我-t); }
+  .chip.sel-王哥 { background: var(--tag-伴); border-color: var(--tag-伴-t); color: var(--tag-伴-t); }
+  .chip.sel-老李 { background: var(--tag-同); border-color: var(--tag-同-t); color: var(--tag-同-t); }
+  .chip.sel-導遊 { background: var(--tag-女); border-color: var(--tag-女-t); color: var(--tag-女-t); }
+
+  .add-btn {
+    width: 100%;
+    margin-top: 16px;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: inherit;
+    color: #fff;
+    background: var(--text);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    letter-spacing: 0.02em;
+  }
+  .add-btn:active { opacity: 0.85; transform: scale(0.98); }
+
+  /* Expense list */
+  .day-group { margin-bottom: 16px; }
+  .day-header {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+    padding: 0 2px;
+  }
+  .exp-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .exp-cat-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+  .exp-body { flex: 1; min-width: 0; }
+  .exp-name { font-size: 15px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .exp-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+  .exp-right { text-align: right; flex-shrink: 0; }
+  .exp-amount { font-size: 16px; font-weight: 700; }
+  .exp-per { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .del-btn {
+    background: none; border: none; color: var(--muted); font-size: 16px;
+    cursor: pointer; padding: 4px; margin-top: -2px;
+  }
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .tag-婷婷 { background: var(--tag-我); color: var(--tag-我-t); }
+  .tag-王哥 { background: var(--tag-伴); color: var(--tag-伴-t); }
+  .tag-老李 { background: var(--tag-同); color: var(--tag-同-t); }
+  .tag-導遊 { background: var(--tag-女); color: var(--tag-女-t); }
+
+  /* Settle */
+  .metric-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .metric-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 14px;
+  }
+  .metric-card .m-label { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+  .metric-card .m-value { font-size: 20px; font-weight: 700; margin-top: 4px; }
+
+  .section-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+  .section-title { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
+
+  .balance-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .balance-row:last-child { border-bottom: none; }
+  .bal-pos { color: var(--green); font-weight: 700; }
+  .bal-neg { color: var(--red); font-weight: 700; }
+
+  .settle-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .settle-row:last-child { border-bottom: none; }
+  .arrow { color: var(--muted); font-size: 16px; }
+  .settle-amount { margin-left: auto; font-weight: 700; color: var(--red); }
+
+  .empty { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 14px; }
+  .empty-icon { font-size: 40px; margin-bottom: 10px; }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--text); color: var(--bg);
+    padding: 10px 20px; border-radius: 99px;
+    font-size: 13px; font-weight: 500;
+    opacity: 0; transition: opacity 0.2s, transform 0.2s;
+    z-index: 999; pointer-events: none; white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Bottom nav */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 430px;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    display: flex;
+    padding-bottom: env(safe-area-inset-bottom);
+    z-index: 100;
+  }
+  .nav-btn {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    padding: 10px 4px 8px;
+    font-size: 10px; font-weight: 500; font-family: inherit;
+    color: var(--muted); background: transparent; border: none; cursor: pointer;
+    gap: 3px; transition: color 0.15s;
+  }
+  .nav-btn.active { color: var(--accent); }
+  .nav-icon { font-size: 22px; line-height: 1; }
+
+  /* Rate info */
+  .rate-info {
+    font-size: 11px; color: var(--muted);
+    text-align: center; margin-top: 8px;
+  }
+
+  /* Exchange toggle */
+  .exchange-row {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--bg); border-radius: 10px; padding: 10px 12px;
+    border: 1px solid var(--border); margin-top: 8px; font-size: 13px;
+  }
+  .exchange-row span { color: var(--muted); }
+  .exchange-row strong { font-size: 15px; }
+
+  .tweak-btn {
+    background: none; border: 1px solid var(--border);
+    border-radius: 8px; padding: 4px 10px;
+    font-size: 12px; font-family: inherit; cursor: pointer; color: var(--text);
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <h1>🍜 福岡帳本</h1>
+      <div class="date-range">4/4 – 4/8 · 四人同行</div>
+    </div>
+    <div class="total-badge">
+      <div class="amount" id="header-total">¥0</div>
+      <div class="label">總花費</div>
+    </div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="gotoTab('add')">＋ 新增</button>
+  <button class="tab-btn" onclick="gotoTab('list')">📋 明細</button>
+  <button class="tab-btn" onclick="gotoTab('settle')">💰 結算</button>
+</div>
+
+<!-- ADD TAB -->
+<div class="tab-panel active" id="tab-add">
+  <div class="form-card">
+    <span class="field-label">費用名稱</span>
+    <input type="text" id="f-name" placeholder="例：晚餐、地鐵、住宿">
+
+    <span class="field-label">日期</span>
+    <input type="date" id="f-date" value="2025-04-04">
+
+    <span class="field-label">金額</span>
+    <div class="amount-row">
+      <select class="currency-select" id="f-currency">
+        <option value="JPY">¥ 日圓</option>
+        <option value="TWD">NT$ 台幣</option>
+      </select>
+      <input type="number" class="amount-input" id="f-amount" placeholder="0" inputmode="numeric">
+    </div>
+    <div class="exchange-row" id="exchange-display">
+      <span>匯率（1 JPY）</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <strong id="rate-display">NT$ 0.21</strong>
+        <button class="tweak-btn" onclick="editRate()">調整</button>
+      </div>
+    </div>
+
+    <span class="field-label">類別</span>
+    <select id="f-cat">
+      <option>🍜 餐飲</option>
+      <option>🏨 住宿</option>
+      <option>🚌 交通</option>
+      <option>🎡 景點門票</option>
+      <option>🛍️ 購物</option>
+      <option>🍺 飲料/酒</option>
+      <option>📦 其他</option>
+    </select>
+
+    <span class="field-label">付款人</span>
+    <div class="chips" id="payer-chips">
+      <button class="chip" data-p="婷婷" onclick="pickPayer(this)">婷婷</button>
+      <button class="chip" data-p="王哥" onclick="pickPayer(this)">王哥</button>
+      <button class="chip" data-p="老李" onclick="pickPayer(this)">老李</button>
+      <button class="chip" data-p="導遊" onclick="pickPayer(this)">導遊</button>
+    </div>
+
+    <span class="field-label">分攤對象</span>
+    <div class="chips" id="split-chips">
+      <button class="chip sel-婷婷" data-p="婷婷" onclick="toggleSplit(this)">婷婷</button>
+      <button class="chip sel-王哥" data-p="王哥" onclick="toggleSplit(this)">王哥</button>
+      <button class="chip sel-老李" data-p="老李" onclick="toggleSplit(this)">老李</button>
+      <button class="chip sel-導遊" data-p="導遊" onclick="toggleSplit(this)">導遊</button>
+    </div>
+
+    <button class="add-btn" onclick="addExpense()">記帳</button>
+  </div>
+</div>
+
+<!-- LIST TAB -->
+<div class="tab-panel" id="tab-list">
+  <div id="list-content"></div>
+</div>
+
+<!-- SETTLE TAB -->
+<div class="tab-panel" id="tab-settle">
+  <div class="metric-row" id="metrics"></div>
+  <div class="section-card">
+    <div class="section-title">各人餘額</div>
+    <div id="balance-list"></div>
+  </div>
+  <div class="section-card">
+    <div class="section-title">最簡還款方案</div>
+    <div id="settle-list"></div>
+  </div>
+  <div class="rate-info" id="settle-rate-note"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const PEOPLE = ['婷婷','王哥','老李','導遊'];
+let expenses = JSON.parse(localStorage.getItem('fk2025') || '[]');
+let selectedPayer = null;
+let selectedSplit = new Set(PEOPLE);
+let JPY_RATE = parseFloat(localStorage.getItem('fk_rate') || '0.21');
+
+// Init date
+const today = new Date();
+const tripDates = ['2025-04-04','2025-04-05','2025-04-06','2025-04-07','2025-04-08'];
+document.getElementById('f-date').value = '2025-04-04';
+updateRateDisplay();
+
+function save() { localStorage.setItem('fk2025', JSON.stringify(expenses)); }
+function saveRate() { localStorage.setItem('fk_rate', JPY_RATE); }
+
+function updateRateDisplay() {
+  document.getElementById('rate-display').textContent = 'NT$ ' + JPY_RATE.toFixed(3);
+}
+
+function editRate() {
+  const r = prompt('請輸入目前日圓匯率（1 JPY = ? TWD）', JPY_RATE);
+  if(r && !isNaN(r) && +r > 0) { JPY_RATE = +r; saveRate(); updateRateDisplay(); toast('匯率已更新：' + JPY_RATE); }
+}
+
+function toJPY(amount, currency) {
+  return currency === 'TWD' ? Math.round(amount / JPY_RATE) : amount;
+}
+function toTWD(jpy) { return Math.round(jpy * JPY_RATE); }
+function fmtJPY(n) { return '¥' + Math.round(n).toLocaleString(); }
+function fmtTWD(n) { return 'NT$' + Math.round(n).toLocaleString(); }
+
+function getTotalTWD() {
+  return expenses.reduce((s, e) => {
+    if (e.currency === 'TWD') return s + e.rawAmount;
+    return s + toTWD(e.amountJPY);
+  }, 0);
+}
+
+function gotoTab(t) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + t).classList.add('active');
+  const idx = {add:0,list:1,settle:2}[t];
+  document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+  if(t === 'list') renderList();
+  if(t === 'settle') renderSettle();
+}
+
+function pickPayer(el) {
+  document.querySelectorAll('#payer-chips .chip').forEach(c => {
+    c.className = 'chip';
+  });
+  const p = el.dataset.p;
+  el.className = 'chip sel-' + p;
+  selectedPayer = p;
+}
+
+function toggleSplit(el) {
+  const p = el.dataset.p;
+  if(selectedSplit.has(p)) {
+    selectedSplit.delete(p);
+    el.className = 'chip';
+  } else {
+    selectedSplit.add(p);
+    el.className = 'chip sel-' + p;
+  }
+}
+
+function addExpense() {
+  const name = document.getElementById('f-name').value.trim();
+  const currency = document.getElementById('f-currency').value;
+  const rawAmount = parseFloat(document.getElementById('f-amount').value) || 0;
+  const cat = document.getElementById('f-cat').value;
+  const date = document.getElementById('f-date').value;
+  if(!name) { toast('請填寫費用名稱 ⚠️'); return; }
+  if(!rawAmount || rawAmount <= 0) { toast('請填寫正確金額 ⚠️'); return; }
+  if(!selectedPayer) { toast('請選擇付款人 ⚠️'); return; }
+  if(selectedSplit.size === 0) { toast('請選擇分攤對象 ⚠️'); return; }
+
+  const amountJPY = toJPY(rawAmount, currency);
+  expenses.push({
+    id: Date.now(), name, cat, date,
+    amountJPY, currency, rawAmount,
+    payer: selectedPayer, split: [...selectedSplit]
+  });
+  save();
+
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-amount').value = '';
+  updateHeader();
+  toast('已記帳：' + name + ' ' + (currency==='JPY'?fmtJPY(rawAmount):fmtTWD(rawAmount)));
+}
+
+function updateHeader() {
+  const total = expenses.reduce((s,e) => s + e.amountJPY, 0);
+  document.getElementById('header-total').textContent = fmtJPY(total);
+}
+
+function formatDate(d) {
+  const [y,m,day] = d.split('-');
+  const weekdays = ['日','一','二','三','四','五','六'];
+  const dt = new Date(d);
+  return `${parseInt(m)}月${parseInt(day)}日（週${weekdays[dt.getDay()]}）`;
+}
+
+function renderList() {
+  const el = document.getElementById('list-content');
+  if(!expenses.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>尚無費用記錄</div>'; return;
+  }
+
+  const byDate = {};
+  [...expenses].reverse().forEach(e => {
+    if(!byDate[e.date]) byDate[e.date] = [];
+    byDate[e.date].push(e);
+  });
+
+  el.innerHTML = Object.keys(byDate).sort((a,b) => b.localeCompare(a)).map(date => {
+    const items = byDate[date];
+    const dayTotal = items.reduce((s,e) => s+e.amountJPY, 0);
+    return `<div class="day-group">
+      <div class="day-header">${formatDate(date)} · ${fmtJPY(dayTotal)}</div>
+      ${items.map(e => `
+        <div class="exp-card">
+          <div class="exp-cat-icon">${e.cat.split(' ')[0]}</div>
+          <div class="exp-body">
+            <div class="exp-name">${e.name}</div>
+            <div class="exp-tags">
+              <span class="tag tag-${e.payer}">${e.payer}付</span>
+              ${e.split.map(p => `<span class="tag tag-${p}">${p}</span>`).join('')}
+            </div>
+          </div>
+          <div class="exp-right">
+            <div class="exp-amount">${e.currency==='TWD' ? 'NT$'+Math.round(e.rawAmount).toLocaleString() : fmtJPY(e.amountJPY)}</div>
+            <div class="exp-per">${fmtJPY(Math.round(e.amountJPY/e.split.length))}/人</div>
+            <button class="del-btn" onclick="delExpense(${e.id})">✕</button>
+          </div>
+        </div>`).join('')}
+    </div>`;
+  }).join('');
+  updateHeader();
+}
+
+function delExpense(id) {
+  if(!confirm('確定刪除這筆費用？')) return;
+  expenses = expenses.filter(e => e.id !== id);
+  save(); updateHeader(); renderList();
+}
+
+function renderSettle() {
+  const totalJPY = expenses.reduce((s,e) => s+e.amountJPY, 0);
+  const totalTWD = getTotalTWD();
+
+  document.getElementById('metrics').innerHTML = [
+    ['合計（日圓）', fmtJPY(totalJPY)],
+    ['合計（台幣）', fmtTWD(totalTWD)],
+    ['共 '+expenses.length+' 筆', '人均 '+fmtJPY(Math.round(totalJPY/4))],
+    ['人均（台幣）', fmtTWD(Math.round(totalTWD/4))]
+  ].map(([l,v]) => `<div class="metric-card"><div class="m-label">${l}</div><div class="m-value">${v}</div></div>`).join('');
+
+  const bal = {};
+  PEOPLE.forEach(p => bal[p] = 0);
+  expenses.forEach(e => {
+    const share = e.amountJPY / e.split.length;
+    bal[e.payer] += e.amountJPY;
+    e.split.forEach(p => bal[p] -= share);
+  });
+
+  document.getElementById('balance-list').innerHTML = PEOPLE.map(p => {
+    const b = Math.round(bal[p]);
+    const twd = toTWD(Math.abs(b));
+    return `<div class="balance-row">
+      <span class="tag tag-${p}">${p}</span>
+      <div style="text-align:right">
+        <span class="${b>=0?'bal-pos':'bal-neg'}">${b>=0?'＋':''}${fmtJPY(b)}</span>
+        <span style="font-size:11px;color:var(--muted);margin-left:6px">≈ NT$${twd.toLocaleString()}</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  const txns = minSettle({...bal});
+  if(!txns.length) {
+    document.getElementById('settle-list').innerHTML = '<div class="empty" style="padding:20px">✅ 目前尚無需還款</div>';
+  } else {
+    document.getElementById('settle-list').innerHTML = txns.map(t =>
+      `<div class="settle-row">
+        <span class="tag tag-${t.from}">${t.from}</span>
+        <span class="arrow">→</span>
+        <span class="tag tag-${t.to}">${t.to}</span>
+        <span class="settle-amount">${fmtJPY(Math.round(t.amount))} <span style="font-size:11px;font-weight:400;color:var(--muted)">≈ NT$${toTWD(t.amount).toLocaleString()}</span></span>
+      </div>`
+    ).join('');
+  }
+  document.getElementById('settle-rate-note').textContent = `匯率：1 JPY = NT$ ${JPY_RATE}`;
+}
+
+function minSettle(bal) {
+  const cr = [], dr = [];
+  Object.entries(bal).forEach(([p,b]) => {
+    if(b > 0.5) cr.push({p, b});
+    else if(b < -0.5) dr.push({p, b: -b});
+  });
+  cr.sort((a,b) => b.b-a.b); dr.sort((a,b) => b.b-a.b);
+  const tx = []; let ci=0, di=0;
+  while(ci<cr.length && di<dr.length) {
+    const amt = Math.min(cr[ci].b, dr[di].b);
+    tx.push({from: dr[di].p, to: cr[ci].p, amount: amt});
+    cr[ci].b -= amt; dr[di].b -= amt;
+    if(cr[ci].b < 0.5) ci++;
+    if(dr[di].b < 0.5) di++;
+  }
+  return tx;
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+updateHeader();
+</script>
+</body>
+</html>
